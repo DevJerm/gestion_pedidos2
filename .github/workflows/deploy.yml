@@ -1,0 +1,36 @@
+name: Deploy .NET Core App with Docker to Azure VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy to Azure VM
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          # Si no existe la carpeta, clona el repo
+          if [ ! -d "pedidos-service" ]; then
+            git clone https://github.com/DevJerm/gestion_pedidos2.git pedidos-service
+          fi
+          cd pedidos-service
+          git pull origin main
+          
+          # Baja cualquier contenedor anterior
+          docker-compose down || true
+          
+          # Construye y levanta en segundo plano
+          docker-compose up --build -d
+        EOF
