@@ -1,0 +1,7 @@
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: inventario-service/Dockerfile
+    ports:
+      - "8081:8080"

@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "inventario-service", "inventario-service\inventario-service.csproj", "{45DE8B0D-402D-4E3C-B3D9-D4F7FAC2A168}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "inventario_service.Test", "inventario_service.Test\inventario_service.Test.csproj", "{1C5F0FD9-2D7C-4141-ACD0-4BC5DA8142ED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{45DE8B0D-402D-4E3C-B3D9-D4F7FAC2A168}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45DE8B0D-402D-4E3C-B3D9-D4F7FAC2A168}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45DE8B0D-402D-4E3C-B3D9-D4F7FAC2A168}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45DE8B0D-402D-4E3C-B3D9-D4F7FAC2A168}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C5F0FD9-2D7C-4141-ACD0-4BC5DA8142ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C5F0FD9-2D7C-4141-ACD0-4BC5DA8142ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C5F0FD9-2D7C-4141-ACD0-4BC5DA8142ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C5F0FD9-2D7C-4141-ACD0-4BC5DA8142ED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

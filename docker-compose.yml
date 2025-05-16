@@ -1,0 +1,120 @@
+services:
+  webapp:
+    build:
+      context: ./Microservicio-pedidos
+      dockerfile: pedidos-service/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - app-network
+    restart: on-failure
+
+  inventario-service:
+    build:
+      context: ./Microservicio-inventario
+      dockerfile: inventario-service/Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - app-network
+    restart: on-failure
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - app-network
+    healthcheck:
+      test: echo stat | nc localhost 2181
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_LOG_RETENTION_HOURS: 24
+    networks:
+      - app-network
+    healthcheck:
+      test: kafka-topics --bootstrap-server kafka:9092 --list || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Esperando a que Kafka esté disponible...' &&
+        sleep 20 &&
+        /docker-entrypoint.sh
+      "
+    networks:
+      - app-network
+    restart: on-failure
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: >
+      bash -c "
+        echo 'Kafka ya está disponible. Creando tópicos de Kafka...' &&
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 --topic disponibilidad-validada &&
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 --topic pedido-creado &&
+        echo 'Tópicos creados exitosamente' &&
+        echo 'Verificando la creación del tópico...' &&
+        kafka-topics --list --bootstrap-server kafka:9092 &&
+        echo 'Configuración de Kafka completada'
+      "
+    networks:
+      - app-network
+    restart: on-failure
+
+networks:
+  app-network:
+    driver: bridge
