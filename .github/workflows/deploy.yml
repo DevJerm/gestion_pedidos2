@@ -21,16 +21,39 @@ jobs:
     - name: Deploy to Azure VM
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          # Si no existe la carpeta, clona el repo
-          if [ ! -d "pedidos-service" ]; then
-            git clone https://github.com/DevJerm/gestion_pedidos2.git pedidos-service
-          fi
-          cd pedidos-service
-          git pull origin main
+          set -e  # Detener en caso de error
           
-          # Baja cualquier contenedor anterior
+          # Configurar Git para usar SSH en lugar de HTTPS
+          git config --global url."johnestivenrestrepomarin@gmail.com".insteadOf "https://github.com/"
+          
+          # Si no existe la carpeta, clona el repo usando SSH
+          if [ ! -d "pedidos-service" ]; then
+            echo "Clonando repositorio..."
+            git clone git@github.com:DevJerm/gestion_pedidos2.git pedidos-service || {
+              echo "Error al clonar el repositorio"
+              exit 1
+            }
+          fi
+          
+          cd pedidos-service || {
+            echo "Error: No se pudo acceder al directorio pedidos-service"
+            exit 1
+          }
+          
+          echo "Actualizando código..."
+          git pull origin main || {
+            echo "Error al hacer pull del repositorio"
+            exit 1
+          }
+          
+          echo "Deteniendo contenedores anteriores..."
           docker-compose down || true
           
-          # Construye y levanta en segundo plano
-          docker-compose up --build -d
+          echo "Construyendo y levantando contenedores..."
+          docker-compose up --build -d || {
+            echo "Error al ejecutar docker-compose"
+            exit 1
+          }
+          
+          echo "¡Despliegue completado con éxito!"
         EOF
